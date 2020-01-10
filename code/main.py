@@ -134,8 +134,8 @@ def main():
     if step == 1:
         print("===> Training Step 1.")
         for epoch in range(opt.start_epoch, opt.epochs + 1):
-            #train(training_data_loader, training_high_loader, model, optimizer, epoch, False)
-            #save_checkpoint(model, optimizer, epoch, scale)
+            train(training_data_loader, training_high_loader, model, optimizer, epoch, False)
+            save_checkpoint(model, optimizer, epoch, scale)
             test(test_data_loader, model, epoch)
         torch.save(model.state_dict(),'backup.pt')
     elif step == 2:
