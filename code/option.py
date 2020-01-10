@@ -49,7 +49,7 @@ parser.add_argument('--chop_forward', action='store_true',
                     help='enable memory-efficient forward')
 parser.add_argument('--testpath', type=str, default='../LR/LRBI/',#test/DIV2K_val_LR_our',
                     help='dataset directory for testing')
-parser.add_argument('--testset', type=str, default='DIV2K',
+parser.add_argument('--testset', type=str, default='B100',
                     help='dataset name for testing')
 
 # Model specifications
