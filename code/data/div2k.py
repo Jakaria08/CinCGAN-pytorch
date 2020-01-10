@@ -47,7 +47,7 @@ class DIV2K(srdata.SRData):
             self.dir_lr = os.path.join(self.apath, 'DIV2K_train_LR_mild')
             self.dir_lrb = os.path.join(self.apath, 'DIV2K_train_LR_bicubic')
         else:
-            self.dir_hr = os.path.join(self.apath, 'DIV2K_train_HR')
+            self.dir_hr = os.path.join(self.apath, 'DIV2K_valid_HR')
             self.dir_lr = os.path.join(self.apath, 'DIV2K_valid_LR_mild')
             self.dir_lrb = os.path.join(self.apath, 'DIV2K_valid_LR_bicubic')
 
