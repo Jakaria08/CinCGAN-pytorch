@@ -15,7 +15,7 @@ import numpy as np
 import math
 import scipy.misc
 import torch.nn.functional as F
-from srresnet import _NetG_DOWN, _NetD 
+from srresnet import _NetG_DOWN, _NetD
 import PIL
 from torchvision import transforms
 import matplotlib.pyplot as plt
@@ -56,7 +56,7 @@ def main():
     cudnn.benchmark = True
     scale = int(args.scale[0])
     print("===> Loading datasets")
-    
+
     opt.n_train = 400
     loader = data.Data(opt)
     opt_high = copy.deepcopy(opt)
@@ -79,8 +79,8 @@ def main():
 
 
     Loaded = torch.load('../experiment/model/EDSR_baseline_x{}.pt'.format(scale))
-    GHR.load_state_dict(Loaded) 
-    
+    GHR.load_state_dict(Loaded)
+
     model = nn.ModuleList()
 
     model.append(GDN) #DN
@@ -89,16 +89,16 @@ def main():
     model.append(DLR)
     model.append(DHR)
     model.append(GNO) #
-    
+
     cudnn.benchmark = True
-    
+
     print("===> Setting GPU")
     if opt.cuda:
         model = model.cuda()
-    
+
     optG = torch.optim.Adam(list(model[0].parameters())+list(model[1].parameters())+ list(model[2].parameters())+list(model[5].parameters()), lr=opt.lr, weight_decay=0)
     optD = torch.optim.Adam(list(model[3].parameters())+list(model[4].parameters()), lr=opt.lr, weight_decay=0)
-    
+
 
     # optionally resume from a checkpoint
     opt.resume = 'model_total_{}.pth'.format(scale)
@@ -107,16 +107,16 @@ def main():
             print("=> loading checkpoint '{}'".format(opt.resume))
             checkpoint = torch.load(opt.resume)
             opt.start_epoch = checkpoint["epoch"] + 1
-            
+
             optG.load_state_dict(checkpoint['optimizer'][0])
             optD.load_state_dict(checkpoint['optimizer'][1])
             model.load_state_dict(checkpoint["model"].state_dict())
         else:
             print("=> no checkpoint found at '{}'".format(opt.resume))
-            
+
     # opt.start_epoch = 401
     step = 2 if opt.start_epoch > opt.epochs else 1
-    
+
     # model.load_state_dict(torch.load('backup.pt'))
 
 
@@ -124,8 +124,8 @@ def main():
     optimizer =  [optG, optD]
 
     # print("===> Setting Optimizer")
-    
-    
+
+
     if opt.test_only:
         print('===> Testing')
         test(test_data_loader, model ,opt.start_epoch)
@@ -134,8 +134,8 @@ def main():
     if step == 1:
         print("===> Training Step 1.")
         for epoch in range(opt.start_epoch, opt.epochs + 1):
-            train(training_data_loader, training_high_loader, model, optimizer, epoch, False)
-            save_checkpoint(model, optimizer, epoch, scale)
+            #train(training_data_loader, training_high_loader, model, optimizer, epoch, False)
+            #save_checkpoint(model, optimizer, epoch, scale)
             test(test_data_loader, model, epoch)
         torch.save(model.state_dict(),'backup.pt')
     elif step == 2:
@@ -152,10 +152,10 @@ def adjust_learning_rate(epoch):
     return lr
 
 def train(training_data_loader, training_high_loader, model, optimizer, epoch, joint=False):
-    
+
     step_weight = 1 if joint else 0
     lr = adjust_learning_rate(epoch-step_weight*opt.epochs)
-    
+
     optG, optD = optimizer
 
     for param_group in optG.param_groups:
@@ -187,8 +187,8 @@ def train(training_data_loader, training_high_loader, model, optimizer, epoch, j
             input_v = input_v.cuda()/args.rgb_range
             y_real = y_real.cuda()
             y_fake = y_fake.cuda()
-        
-        
+
+
         optG.zero_grad()
 
         ########### D lr ##############
@@ -204,7 +204,7 @@ def train(training_data_loader, training_high_loader, model, optimizer, epoch, j
 
         (D_lr_loss).backward(retain_graph=True)
         optD.step()
-        
+
 
 
         fake_lr_g = model[3](dn_)
@@ -214,7 +214,7 @@ def train(training_data_loader, training_high_loader, model, optimizer, epoch, j
         DG_lr_loss.backward(retain_graph=True)
 
         # TV lr loss
-        dn_ = model[0](input_v)    
+        dn_ = model[0](input_v)
 
         TV_loss_lr = 0.5 * tvloss(dn_)
         TV_loss_lr.backward(retain_graph=True)
@@ -227,11 +227,11 @@ def train(training_data_loader, training_high_loader, model, optimizer, epoch, j
         idt_loss_l = idt_loss_l * 5
         idt_loss_l.backward(retain_graph=True)
 
-        
+
         dn_ = model[0](input_v)
         no_ = model[5](dn_)
-        
-        cyc_loss_l = criterion(no_, input_v) 
+
+        cyc_loss_l = criterion(no_, input_v)
         cyc_loss_l = cyc_loss_l * 10
         cyc_loss_l.backward(retain_graph=True)
 
@@ -254,23 +254,23 @@ def train(training_data_loader, training_high_loader, model, optimizer, epoch, j
 
         (D_hr_loss).backward(retain_graph=True)
         optD.step()
-        
+
 
         fake_hr_g = model[4](hr_)
         DG_hr_loss = \
                         criterionD(fake_hr_g, y_real.expand_as(fake_hr_g)) * step_weight
 
         DG_hr_loss.backward(retain_graph=True)
-        
+
         # TV hr loss
 
-        dn_ = model[0](input_v)    
+        dn_ = model[0](input_v)
         hr_ = model[1](dn_)
 
         TV_loss_hr = 2 * step_weight * tvloss(hr_)
         TV_loss_hr.backward(retain_graph=True)
 
-        ########## cycle & idt hr ###########        
+        ########## cycle & idt hr ###########
 
         bi_ = model[1](bicubic)
 
@@ -280,7 +280,7 @@ def train(training_data_loader, training_high_loader, model, optimizer, epoch, j
 
         idt_loss = idt_loss * 5
         idt_loss.backward(retain_graph=True)
-        
+
         dn_ = model[0](input_v)
         hr_ = model[1](dn_)
         lr_ = model[2](hr_)
@@ -288,14 +288,14 @@ def train(training_data_loader, training_high_loader, model, optimizer, epoch, j
         cyc_loss = \
                    criterion(lr_, input_v) * step_weight
         cyc_loss = cyc_loss * 10
-        
+
         cyc_loss.backward()
 
         # update G(hr)
         optG.step()
-        
-        
-        
+
+
+
         if iteration%10 == 0:
             with torch.no_grad():
                 sr_ = model[1](model[0](input))
@@ -322,7 +322,7 @@ def test(test_data_loader, model, epoch):
     model.eval()
     for iteration, batch in enumerate(test_data_loader):
         input, target, bicubic = batch[0], batch[1], batch[2]
-        if opt.cuda: 
+        if opt.cuda:
             target = target.cuda()/args.rgb_range
             input = input.cuda()/args.rgb_range
             bicubic = bicubic.cuda()/args.rgb_range
@@ -337,7 +337,7 @@ def test(test_data_loader, model, epoch):
         avg += psnr#.data
         avg_ += psnr_#.data
 
-        
+
         print("===> ({}/{}): psnr lr: {:.10f} hr: {:.10f} "\
                     .format(iteration, len(test_data_loader), psnr, psnr_,))
     print('lr psnr', avg/n, 'hr psnr', avg_/n)
@@ -347,7 +347,7 @@ def test(test_data_loader, model, epoch):
 def to_numpy(var):
     return var.data.cpu().numpy()
 
-        
+
 def save_checkpoint(model, optimizer, epoch, scale=2):
     model_out_path =  "model_total_{}.pth".format(scale)
     state = {"epoch": epoch ,"model": model, 'optimizer': [optimizer[0].state_dict(), optimizer[1].state_dict()]}
