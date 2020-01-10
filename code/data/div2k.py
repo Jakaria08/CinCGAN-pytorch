@@ -42,12 +42,15 @@ class DIV2K(srdata.SRData):
 
     def _set_filesystem(self, dir_data):
         self.apath = dir_data + '/DIV2K'
-        self.dir_hr = os.path.join(self.apath, 'DIV2K_train_HR')
         if self.train:
+            self.dir_hr = os.path.join(self.apath, 'DIV2K_train_HR')
             self.dir_lr = os.path.join(self.apath, 'DIV2K_train_LR_mild')
+            self.dir_lrb = os.path.join(self.apath, 'DIV2K_train_LR_bicubic')
         else:
+            self.dir_hr = os.path.join(self.apath, 'DIV2K_train_HR')
             self.dir_lr = os.path.join(self.apath, 'DIV2K_valid_LR_mild')
-        self.dir_lrb = os.path.join(self.apath, 'DIV2K_train_LR_bicubic')
+            self.dir_lrb = os.path.join(self.apath, 'DIV2K_valid_LR_bicubic')
+
         self.ext = '.png'
 
     def _name_hrbin(self):
